@@ -5,7 +5,10 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from playwright.sync_api import sync_playwright
 
 from banco import carregar_fundamentos, conectar, criar_tabelas
-from config import SETORES
+try:
+    from config import SETORES
+except ModuleNotFoundError:
+    from config_base import SETORES
 from relatorios.capital_flow_leaders import _formatar_dinheiro, _preco_e_adv
 from relatorios.narrativa import qualidade_dados
 

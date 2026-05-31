@@ -1,6 +1,9 @@
 from banco import conectar, criar_tabelas
 from coleta import coletar
-from config import BENCHMARK, SETORES, TODOS_OS_TICKERS
+try:
+    from config import BENCHMARK, SETORES, TODOS_OS_TICKERS
+except ModuleNotFoundError:
+    from config_base import BENCHMARK, SETORES, TODOS_OS_TICKERS
 from metricas import calcular_metricas, calcular_metricas_diarias
 from relatorios.alerta_diario import gerar_alerta_diario_pdf
 from score import calcular_score

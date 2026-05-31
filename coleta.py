@@ -4,7 +4,10 @@ import requests
 import yfinance as yf
 
 from banco import carregar_fundamentos, salvar_fundamentos, salvar_precos
-from config import TOKEN_BRAPI
+try:
+    from config import TOKEN_BRAPI
+except ModuleNotFoundError:
+    from config_base import TOKEN_BRAPI
 
 
 class BrapiHistoricoError(Exception):

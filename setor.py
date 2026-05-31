@@ -1,7 +1,10 @@
 import pandas as pd
 
 from banco import gravar_score_setor
-from config import BENCHMARK, SCORE_MODERADO, SETORES
+try:
+    from config import BENCHMARK, SCORE_MODERADO, SETORES
+except ModuleNotFoundError:
+    from config_base import BENCHMARK, SCORE_MODERADO, SETORES
 from metricas import calcular_metricas, carregar_precos
 from score import (
     _limitar,

@@ -1,7 +1,10 @@
 import pandas as pd
 
 from banco import conectar
-from config import BENCHMARK
+try:
+    from config import BENCHMARK
+except ModuleNotFoundError:
+    from config_base import BENCHMARK
 
 
 def carregar_precos(ticker):

@@ -49,8 +49,5 @@ jobs:
       - name: Install Chromium for Playwright
         run: python -m playwright install --with-deps chromium
 
-      - name: Create runtime config from GitHub Secrets
-        run: cp config.exemplo.py config.py
-
       - name: Run Flow Map Brasil
         run: python main.py --modo "${{ github.event.inputs.modo || 'auto' }}"

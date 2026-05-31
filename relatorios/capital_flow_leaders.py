@@ -6,12 +6,20 @@ from playwright.sync_api import sync_playwright
 
 from banco import conectar, criar_tabelas
 from coleta import coletar_fundamentos
-from config import (
-    MIN_MARKET_CAP,
-    MIN_PRECO,
-    MIN_VOLUME_DIARIO,
-    SETORES,
-)
+try:
+    from config import (
+        MIN_MARKET_CAP,
+        MIN_PRECO,
+        MIN_VOLUME_DIARIO,
+        SETORES,
+    )
+except ModuleNotFoundError:
+    from config_base import (
+        MIN_MARKET_CAP,
+        MIN_PRECO,
+        MIN_VOLUME_DIARIO,
+        SETORES,
+    )
 from metricas import calcular_metricas
 from tape import calcular_tape
 from relatorios.narrativa import checa_negociabilidade, qualidade_dados

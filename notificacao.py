@@ -3,7 +3,10 @@ from pathlib import Path
 
 from telegram import Bot
 
-from config import CHAT_ID_TELEGRAM, TOKEN_TELEGRAM
+try:
+    from config import CHAT_ID_TELEGRAM, TOKEN_TELEGRAM
+except ModuleNotFoundError:
+    from config_base import CHAT_ID_TELEGRAM, TOKEN_TELEGRAM
 
 
 def _telegram_configurado():

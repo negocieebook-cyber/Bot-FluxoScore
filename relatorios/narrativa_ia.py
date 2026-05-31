@@ -2,7 +2,10 @@ import json
 
 import requests
 
-from config import OPENROUTER_API_KEY, OPENROUTER_MODEL
+try:
+    from config import OPENROUTER_API_KEY, OPENROUTER_MODEL
+except ModuleNotFoundError:
+    from config_base import OPENROUTER_API_KEY, OPENROUTER_MODEL
 
 
 SYSTEM_PROMPT = (

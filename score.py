@@ -1,5 +1,8 @@
 from banco import gravar_score
-from config import BENCHMARK
+try:
+    from config import BENCHMARK
+except ModuleNotFoundError:
+    from config_base import BENCHMARK
 from metricas import calcular_metricas
 from tape import calcular_tape
 

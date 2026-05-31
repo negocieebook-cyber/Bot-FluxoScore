@@ -1,7 +1,10 @@
 import pandas as pd
 
 from banco import conectar
-from config import SCORE_MODERADO
+try:
+    from config import SCORE_MODERADO
+except ModuleNotFoundError:
+    from config_base import SCORE_MODERADO
 
 
 def _carregar_precos_diarios(ticker):

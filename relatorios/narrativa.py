@@ -6,7 +6,10 @@ Apenas lê dados existentes do banco — não altera nenhum motor
 from datetime import datetime, timedelta
 
 from banco import conectar, carregar_fundamentos
-from config import MIN_MARKET_CAP, MIN_PRECO, MIN_VOLUME_DIARIO, SETORES, TODOS_OS_TICKERS
+try:
+    from config import MIN_MARKET_CAP, MIN_PRECO, MIN_VOLUME_DIARIO, SETORES, TODOS_OS_TICKERS
+except ModuleNotFoundError:
+    from config_base import MIN_MARKET_CAP, MIN_PRECO, MIN_VOLUME_DIARIO, SETORES, TODOS_OS_TICKERS
 
 
 # ── Retorno Semanal (leitura direta da tabela precos) ─────────────────────────
