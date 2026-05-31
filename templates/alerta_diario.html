@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Flow Map Diário</title>
+  <style>
+    {% include 'estilo.css' %}
+    .ambiente-faixa {
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-weight: 800;
+      margin: 10px 0 16px;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+    }
+    .ambiente-ok { background: var(--verde-claro); color: var(--verde-escuro); border: 1px solid #9bc7a8; }
+    .ambiente-ruim { background: var(--vermelho-claro); color: var(--vermelho); border: 1px solid #e4aaaa; }
+    .alert-card {
+      border: 1px solid var(--borda);
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      break-inside: avoid;
+      background: #fff;
+    }
+    .alert-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+      font-weight: 800;
+      color: var(--verde-escuro);
+    }
+    .alert-meta { color: var(--cinza-medio); font-size: 10px; margin-top: 2px; }
+    .alert-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      margin: 8px 0;
+    }
+    .alert-metric {
+      background: var(--cinza-claro);
+      border: 1px solid var(--borda);
+      border-radius: 6px;
+      padding: 6px;
+      text-align: center;
+      font-size: 10px;
+      font-weight: 700;
+    }
+    .gatilho { font-weight: 800; color: var(--verde); margin-top: 5px; }
+    .significado { margin-top: 4px; }
+    .inval { margin-top: 4px; color: var(--cinza-medio); font-size: 10px; }
+    .dist-row {
+      display: grid;
+      grid-template-columns: 72px 1fr 120px;
+      border-bottom: 1px solid var(--borda);
+      padding: 6px 0;
+      gap: 8px;
+    }
+    .dist-aviso {
+      background: var(--vermelho-claro);
+      color: var(--vermelho);
+      font-weight: 800;
+      padding: 8px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+    .glossario {
+      font-size: 10px;
+      color: var(--cinza-medio);
+      margin-top: 14px;
+      border-top: 1px solid var(--borda);
+      padding-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="report-header">
+    <h1 class="report-title">Flow Map Diário</h1>
+    <div class="report-subtitle">{{ data_dia }}</div>
+    <div class="header-divider"></div>
+  </div>
+
+  <div class="ambiente-faixa {{ 'ambiente-ok' if ambiente.favoravel else 'ambiente-ruim' }}">
+    {{ ambiente.texto }}
+  </div>
+
+  <div class="section-title">Oportunidades do Dia</div>
+  {% if oportunidades %}
+    {% for item in oportunidades %}
+      <div class="alert-card">
+        <div class="alert-top">
+          <div>{{ '⭐ ' if item.maior_conviccao else '' }}{{ item.ticker }} · {{ item.setor }} · {{ item.quadrante }}</div>
+          <div>Score {{ "%.1f"|format(item.score) }}</div>
+        </div>
+        <div class="alert-grid">
+          <div class="alert-metric">CF<br>{{ "%.1f"|format(item.cf) }}/40</div>
+          <div class="alert-metric">Trend<br>{{ "%.1f"|format(item.trend) }}/30</div>
+          <div class="alert-metric">Mom<br>{{ "%.1f"|format(item.mom) }}/30</div>
+          <div class="alert-metric">UDVR<br>{{ "%.2f"|format(item.UDVR) }}x</div>
+          <div class="alert-metric">RS-Mom<br>{{ "%.1f"|format(item.rs_momentum) }}</div>
+        </div>
+        <div class="gatilho">Gatilho: {{ item.gatilhos|join(', ') }}</div>
+        <div class="significado">→ {{ item.significado }}</div>
+        <div class="inval">Invalidação: {{ item.invalidacao }}</div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="empty-state">Nenhum gatilho de compra hoje.</div>
+  {% endif %}
+
+  <div class="section-title">Distribuição — Atenção se Tiver Posição</div>
+  {% if distribuicoes %}
+    <div class="dist-aviso">Não são compra. Reavalie se tiver posição.</div>
+    {% for item in distribuicoes %}
+      <div class="dist-row">
+        <strong>{{ item.ticker }}</strong>
+        <span>{{ item.setor }}</span>
+        <span>saída detectada (DDVR {{ "%.2f"|format(item.DDVR) }}x)</span>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="empty-state">Nenhuma distribuição relevante hoje.</div>
+  {% endif %}
+
+  {% if tape_mista %}
+  <div class="section-title">Tape Mista</div>
+  <div class="empty-state">
+    TAPE MISTA ({{ tape_mista|length }} ativos): sinais conflitantes, aguardar definição.
+    {% for item in tape_mista %}
+      {{ item.ticker }}{% if not loop.last %}, {% endif %}
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="glossario">
+    {{ sem_gatilho }} ativos sem gatilho hoje. Relatório completo: sábado.<br>
+    <strong>Mini-glossário:</strong>
+    {% if glossario %}{{ glossario|join(' · ') }}{% else %}sem termos técnicos adicionais{% endif %}
+  </div>
+</body>
+</html>

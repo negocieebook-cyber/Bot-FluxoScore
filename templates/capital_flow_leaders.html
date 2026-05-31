@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Capital Flow Leaders</title>
+  <style>
+{% include 'estilo.css' %}
+  </style>
+</head>
+<body>
+
+  <!-- ═══ CABEÇALHO ═══ -->
+  <header class="report-header">
+    <div class="report-title">Capital Flow Leaders</div>
+    <div class="report-subtitle">Ações Líderes por Fluxo, Tendência e Momentum &nbsp;·&nbsp; Semana {{ data_semana }}</div>
+    <div class="header-divider"></div>
+  </header>
+
+  <!-- Frase-topo leiga -->
+  <p class="frase-topo">
+    {% if lideres %}
+      {{ lideres|length }} ação(ões) passaram em todos os critérios de liderança esta semana —
+      score ≥ 60, momentum acima do índice e liquidez adequada.
+    {% else %}
+      Nenhuma ação atinge todos os critérios de liderança esta semana.
+    {% endif %}
+  </p>
+
+  <!-- ═══ CARDS DOS LÍDERES ═══ -->
+  {% if not lideres %}
+    <div class="empty-state">nenhuma ação cumpre os critérios de liderança esta semana</div>
+  {% endif %}
+
+  {% for item in lideres %}
+    <section class="stock-card">
+      <div class="card-topline">
+        <div class="card-rank">#{{ loop.index }}</div>
+        <div class="card-ticker">{{ item.ticker }}</div>
+        <div class="card-setor">{{ item.setor }}</div>
+        <div class="card-score-big">
+          {{ "%.0f"|format(item.score) }}<span style="font-size:13px;font-weight:400;color:var(--cinza-medio)">/100</span>
+        </div>
+      </div>
+
+      <div class="card-was">
+        {% if item.score_anterior is none %}
+          nova leitura
+        {% else %}
+          era {{ "%.0f"|format(item.score_anterior) }} &nbsp;·&nbsp;
+          <span style="color:{{ 'var(--verde)' if item.delta_score >= 0 else 'var(--vermelho)' }}">
+            {{ "%+.1f"|format(item.delta_score) }} esta semana
+          </span>
+        {% endif %}
+      </div>
+
+      {% if item.sma200_parcial %}
+        <div class="card-flags">SMA200 parcial — dados insuficientes ({{ item.qtd_pregoes }} pregões)</div>
+      {% endif %}
+
+      <div class="card-info">
+        Preço <strong>{{ item.preco_fmt }}</strong> &nbsp;·&nbsp;
+        Mkt Cap <strong>{{ item.market_cap_fmt }}</strong> &nbsp;·&nbsp;
+        ADV <strong>{{ item.adv_fmt }}</strong> &nbsp;·&nbsp;
+        Up-Day Vol <strong>{{ "%.0f"|format(item.up_day_vol_pct) }}%</strong>
+        (UDVR <strong>{{ "%.1f"|format(item.UDVR) }}x</strong>)
+      </div>
+
+      <div class="metric-pills">
+        <div class="pill">
+          <span class="pill-label">Capital Flow</span>
+          <span class="pill-val">{{ "%.0f"|format(item.cf) }}<span style="font-size:11px;color:var(--cinza-medio)">/40</span></span>
+        </div>
+        <div class="pill">
+          <span class="pill-label">Tendência</span>
+          <span class="pill-val">{{ "%.0f"|format(item.trend) }}<span style="font-size:11px;color:var(--cinza-medio)">/30</span></span>
+        </div>
+        <div class="pill">
+          <span class="pill-label">Momentum</span>
+          <span class="pill-val">{{ "%.0f"|format(item.mom) }}<span style="font-size:11px;color:var(--cinza-medio)">/30</span></span>
+        </div>
+      </div>
+
+      {% if item.flags_txt and item.flags_txt != 'sem flags ativas' %}
+        <div class="card-flags">{{ item.flags_txt }}</div>
+      {% endif %}
+      <div class="card-narrativa">{{ item.narrativa }}</div>
+    </section>
+  {% endfor %}
+
+  <!-- ═══ SEÇÃO 3: QUASE LÁ ═══ -->
+  <div class="section-title">Quase Lá — Antessala da Liderança</div>
+  <div class="quase-la-intro">
+    Estas ações estão a um passo da liderança — vale acompanhar.
+    Passam em 3 dos 4 critérios (score ≥ 60 · RS-Mom ≥ 100 · retorno relativo positivo · liquidez).
+    A coluna "Falta" mostra o único gatilho pendente.
+  </div>
+
+  {% if quase_la %}
+    {% set crit_label = {'score': 'SCORE', 'momentum': 'RS-MOM', 'retorno_relativo': 'RET.REL', 'negociabilidade': 'LIQUIDEZ'} %}
+    {% set crit_class = {'score': 'ql-score-crit', 'momentum': 'ql-mom-crit', 'retorno_relativo': 'ql-rel-crit', 'negociabilidade': 'ql-trade-crit'} %}
+    {% for item in quase_la %}
+      <div class="quase-la-card">
+        <div style="min-width:68px">
+          <div class="ql-ticker">{{ item.ticker }}</div>
+          <div class="ql-setor">{{ item.setor }}</div>
+        </div>
+        <div class="ql-score">{{ "%.1f"|format(item.score) }}</div>
+        <div class="ql-falta">
+          <span class="ql-criterio {{ crit_class.get(item.criterio, '') }}">
+            {{ crit_label.get(item.criterio, item.criterio) }}
+          </span>
+          {{ item.falta }}
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="empty-state">nenhuma ação a um passo da liderança esta semana</div>
+  {% endif %}
+
+  <!-- ═══ SEÇÃO 4: LISTA DE OBSERVAÇÃO ═══ -->
+  <div class="section-title">Lista de Observação — Próxima Semana</div>
+  <div class="obs-bloco">
+    <div class="obs-bloco-titulo">Líderes — manter monitoramento</div>
+    {% if observacao.lideres %}
+      {% for obs in observacao.lideres %}
+        <div class="obs-item">{{ obs }}</div>
+      {% endfor %}
+    {% else %}
+      <div class="obs-item muted">Nenhum líder esta semana.</div>
+    {% endif %}
+  </div>
+  <!-- ═══ SEÇÃO 5: QUALIDADE DOS DADOS ═══ -->
+  <div class="section-title">Qualidade dos Dados</div>
+  <div class="qualidade-grid">
+    <div class="qualidade-item">
+      <span class="qualidade-label">Semana de referência</span>
+      {{ qualidade.data_semana }}
+    </div>
+    <div class="qualidade-item">
+      <span class="qualidade-label">Universo monitorado</span>
+      {{ qualidade.total_universo }} ações + {{ qualidade.benchmark }}
+    </div>
+    <div class="qualidade-item">
+      <span class="qualidade-label">Com score calculado</span>
+      <span class="qualidade-tickers ok">{{ qualidade.com_score }} tickers</span>
+    </div>
+    <div class="qualidade-item">
+      <span class="qualidade-label">Histórico completo (≥ 200 pregões)</span>
+      <span class="qualidade-tickers ok">{{ qualidade.com_dados_completos }} tickers</span>
+    </div>
+    {% if qualidade.sma_parcial %}
+    <div class="qualidade-item" style="grid-column:1/-1">
+      <span class="qualidade-label">SMA200 parcial — histórico &lt; 200 pregões</span>
+      <span class="qualidade-tickers parcial">
+        {% for ticker, n in qualidade.sma_parcial %}{{ ticker }} ({{ n }}d){% if not loop.last %}, {% endif %}{% endfor %}
+      </span>
+    </div>
+    {% endif %}
+    {% if qualidade.sem_dados %}
+    <div class="qualidade-item" style="grid-column:1/-1">
+      <span class="qualidade-label">Sem dados este período</span>
+      <span class="qualidade-tickers">{{ qualidade.sem_dados | join(', ') }}</span>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ═══ GLOSSÁRIO ═══ -->
+  <div class="glossario-box">
+    <div class="glossario-titulo">Glossário de Métricas</div>
+    <div class="glossario-grid">
+      <div class="glossario-entry"><span class="glossario-term">Flow Score (0–100):</span> Capital Flow (40pts) + Tendência (30pts) + Momentum (30pts).</div>
+      <div class="glossario-entry"><span class="glossario-term">RS-Ratio:</span> Força relativa ação/benchmark. Acima de 100 = superando o BOVA11.</div>
+      <div class="glossario-entry"><span class="glossario-term">RS-Momentum:</span> Aceleração do RS-Ratio nas 4 semanas. Acima de 100 = ganhando força.</div>
+      <div class="glossario-entry"><span class="glossario-term">UDVR:</span> Volume nos dias de alta ÷ volume médio 30d. Acima de 1.5x = acumulação.</div>
+      <div class="glossario-entry"><span class="glossario-term">DDVR:</span> Volume nos dias de baixa ÷ volume médio 30d. Acima de 1.5x = distribuição.</div>
+      <div class="glossario-entry"><span class="glossario-term">ADV:</span> Average Daily Volume (R$) — liquidez mínima exigida: R$ 8 milhões/dia.</div>
+      <div class="glossario-entry"><span class="glossario-term">Retorno relativo:</span> Retorno da ação menos retorno do BOVA11 no mesmo período.</div>
+      <div class="glossario-entry"><span class="glossario-term">SMA200 parcial:</span> Média de 200 dias incompleta — score menos confiável, histórico curto.</div>
+    </div>
+  </div>
+
+  <footer>
+    Relatório educacional — não constitui recomendação de investimento.
+    Critérios quantitativos podem falhar com dados incompletos ou atrasados.
+  </footer>
+
+</body>
+</html>

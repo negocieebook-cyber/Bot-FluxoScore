@@ -1,0 +1,8 @@
+requests
+yfinance
+pandas
+numpy
+matplotlib
+jinja2
+playwright
+python-telegram-bot

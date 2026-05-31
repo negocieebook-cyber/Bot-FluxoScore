@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>The Flow Map — Painel Setorial B3</title>
+  <style>
+{% include 'estilo.css' %}
+  </style>
+</head>
+<body>
+
+  <!-- ═══ CABEÇALHO ═══ -->
+  <header class="report-header">
+    <div class="report-title">The Flow Map</div>
+    <div class="report-subtitle">Painel Setorial B3 &nbsp;·&nbsp; Semana {{ data_semana }}</div>
+    <div class="header-divider"></div>
+  </header>
+
+  <!-- ═══ MARKET FLOW GAUGE — CARDS ═══ -->
+  <div class="cards-row">
+    <div class="card-metric">
+      <div class="cm-label">Market Flow Gauge</div>
+      <div class="cm-valor gauge-{{ market_gauge.classe }}">{{ market_gauge.nome }}</div>
+      <div class="cm-sub">
+        <span class="gauge-badge {{ market_gauge.classe }}">
+          {{ market_gauge.setores_fortes }} de 10 setores com score ≥ 60
+        </span>
+      </div>
+    </div>
+    <div class="card-metric">
+      <div class="cm-label">Setores Líderes</div>
+      <div class="cm-valor gauge-{{ market_gauge.classe }}">{{ market_gauge.setores_fortes }}</div>
+      <div class="cm-sub">score ≥ 60</div>
+    </div>
+    <div class="card-metric">
+      <div class="cm-label">Setores em Alerta</div>
+      <div class="cm-valor gauge-vermelho">{{ 10 - market_gauge.setores_fortes }}</div>
+      <div class="cm-sub">score &lt; 60</div>
+    </div>
+    <div class="card-metric">
+      <div class="cm-label">Universo</div>
+      <div class="cm-valor" style="color:var(--texto)">10</div>
+      <div class="cm-sub">setores B3 monitorados</div>
+    </div>
+  </div>
+
+  <!-- ═══ SEÇÃO 1: LEITURA ESTRATÉGICA ═══ -->
+  <div class="section-title">Leitura Estratégica</div>
+  {% if leitura_estrategica.paragrafo %}
+  <p class="frase-topo">{{ leitura_estrategica.paragrafo }}</p>
+  {% endif %}
+  <p class="frase-topo">
+    {% if leitura_estrategica.acionavel %}
+      {{ leitura_estrategica.acionavel|length }} setor(es) com sinal de entrada claro esta semana.
+      {% if leitura_estrategica.no_radar %}
+        {{ leitura_estrategica.no_radar|length }} no radar de transição.
+      {% endif %}
+      {% if leitura_estrategica.evitar %}
+        Evite {{ leitura_estrategica.evitar|length }} setor(es) em fraqueza estrutural.
+      {% endif %}
+    {% else %}
+      Nenhum setor atinge o corte de liderança esta semana — mercado em modo de espera.
+    {% endif %}
+  </p>
+
+  <div class="leitura-grid">
+    <!-- ACIONÁVEL AGORA -->
+    <div class="leitura-bloco acionavel">
+      <div class="leitura-bloco-titulo">✅ Acionável Agora</div>
+      {% if leitura_estrategica.acionavel %}
+        {% for item in leitura_estrategica.acionavel %}
+          <div class="leitura-item">
+            {{ item.frase }}
+            {% if item.estreita %}
+              <span class="leitura-estreita">
+                ⚠ Liderança estreita — puxada por poucas ações, cuidado com aposta concentrada.
+              </span>
+            {% endif %}
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="leitura-vazio">Nenhum setor com score ≥ 60 esta semana.</div>
+      {% endif %}
+    </div>
+
+    <!-- NO RADAR -->
+    <div class="leitura-bloco radar">
+      <div class="leitura-bloco-titulo">🔍 No Radar</div>
+      {% if leitura_estrategica.no_radar %}
+        {% for item in leitura_estrategica.no_radar %}
+          <div class="leitura-item">{{ item.frase }}</div>
+        {% endfor %}
+      {% else %}
+        <div class="leitura-vazio">Nenhum setor em Improving com RS-Mom ≥ 100.</div>
+      {% endif %}
+    </div>
+
+    <!-- EVITAR -->
+    <div class="leitura-bloco evitar">
+      <div class="leitura-bloco-titulo">⚠️ Evitar</div>
+      {% if leitura_estrategica.evitar %}
+        {% for item in leitura_estrategica.evitar %}
+          <div class="leitura-item">{{ item.frase }}</div>
+        {% endfor %}
+      {% else %}
+        <div class="leitura-vazio">Nenhum setor em Lagging esta semana.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ═══ RANKING DOS SETORES ═══ -->
+  {% set q_class = {'Leading': 'q-leading', 'Improving': 'q-improving', 'Weakening': 'q-weakening', 'Lagging': 'q-lagging'} %}
+
+  <div class="section-title">Ranking dos 10 Setores</div>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:26px">#</th>
+        <th>Setor</th>
+        <th class="bar-cell">Score / Barra</th>
+        <th class="num">CF</th>
+        <th class="num">Trend</th>
+        <th class="num">Mom</th>
+        <th>Quadrante RRG</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in ranking %}
+      <tr>
+        <td style="color:var(--cinza-medio);font-size:10px">{{ loop.index }}</td>
+        <td style="font-weight:600">{{ item.setor }}</td>
+        <td class="bar-cell">
+          <span class="score-grande {{ 'score-forte' if item.score >= 60 else 'score-fraco' }}">
+            {{ "%.1f"|format(item.score) }}
+          </span>
+          <span class="confirmacao-txt">{{ item.confirmacao_interna }}</span>
+          {% if item.lideranca_estreita %}
+            <span class="alerta-tag">⚠ liderança estreita</span>
+          {% endif %}
+          <div class="bar-wrap">
+            <div class="bar-fill {{ 'forte' if item.score >= 60 else 'fraco' }}"
+                 style="width:{{ [item.score, 100]|min }}%"></div>
+            <div class="bar-mark" style="left:40%"></div>
+            <div class="bar-mark" style="left:60%"></div>
+          </div>
+        </td>
+        <td class="num">{{ "%.1f"|format(item.cf) }}</td>
+        <td class="num">{{ "%.1f"|format(item.trend) }}</td>
+        <td class="num">{{ "%.1f"|format(item.mom) }}</td>
+        <td>
+          <span class="q-badge {{ q_class.get(item.quadrante, '') }}">{{ item.quadrante }}</span>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <div class="legenda-barra">― ― Alerta: 40 &nbsp;|&nbsp; ― ― Liderança: 60</div>
+
+  <!-- ═══ SEÇÃO 2: AÇÕES DOS SETORES LÍDERES ═══ -->
+  {% if acoes_lideres %}
+  <div class="section-title">Ações que Explicam os Setores Líderes</div>
+  <p class="frase-topo" style="margin-bottom:12px">
+    Cada setor líder tem ações que puxam (ou freiam) seu score. A coluna LEITURA mostra
+    se cada ação confirma ou diverge do movimento do setor.
+  </p>
+
+  {% for bloco in acoes_lideres %}
+    <div class="acoes-setor-bloco">
+      <div class="acoes-setor-titulo">
+        {{ bloco.setor }} — Score {{ "%.1f"|format(bloco.score) }}
+        &nbsp;·&nbsp; {{ bloco.confirmacao }}
+      </div>
+      <div class="acoes-setor-frase">
+        {{ bloco.n_confirma }} de {{ bloco.n_total }} ações confirmam o movimento do setor.
+      </div>
+      {% if bloco.acoes %}
+      <table>
+        <thead>
+          <tr>
+            <th>Ticker</th>
+            <th class="num">Ret.Sem</th>
+            <th class="num">Ret.Rel</th>
+            <th class="num">RS-Ratio</th>
+            <th class="num">RS-Mom</th>
+            <th class="num">Vol.Rel</th>
+            <th class="num">Score</th>
+            <th>Tape</th>
+            <th>Leitura</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in bloco.acoes %}
+          {% set lr = a.leitura %}
+          {% set lr_class = 'leitura-confirma' if lr == 'Confirma o setor' else ('leitura-diverge' if lr == 'Diverge do setor' else ('leitura-melhora' if lr == 'Força rel. em melhora' else 'leitura-perda')) %}
+          <tr>
+            <td style="font-weight:700">{{ a.ticker }}</td>
+            <td class="num {{ 'ret-pos' if a.ret_sem.startswith('+') else ('ret-neg' if a.ret_sem.startswith('-') else '') }}">
+              {{ a.ret_sem }}
+            </td>
+            <td class="num {{ 'ret-pos' if a.ret_rel.startswith('+') else ('ret-neg' if a.ret_rel.startswith('-') else '') }}">{{ a.ret_rel }}</td>
+            <td class="num">{{ "%.1f"|format(a.rs_ratio) }}</td>
+            <td class="num">{{ "%.1f"|format(a.rs_mom) }}</td>
+            <td class="num">{{ "%.1f"|format(a.vol_rel) }}x</td>
+            <td class="num {{ 'score-forte' if a.score >= 60 else 'score-fraco' }}">{{ "%.1f"|format(a.score) }}</td>
+            <td style="font-size:9.5px">{{ a.tape }}</td>
+            <td><span class="leitura-badge {{ lr_class }}">{{ a.leitura }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+        <div class="empty-state" style="font-size:10px">dados insuficientes para este setor</div>
+      {% endif %}
+    </div>
+  {% endfor %}
+  {% endif %}
+
+  <!-- ═══ BIGGEST MOVERS ═══ -->
+  <div class="section-title">Biggest Movers</div>
+  {% if movers.historico_insuficiente %}
+    <div class="empty-state">histórico insuficiente para calcular variação semanal</div>
+  {% else %}
+    <table>
+      <thead>
+        <tr>
+          <th>Maiores Altas</th>
+          <th class="num">Δ Score</th>
+          <th>Maiores Quedas</th>
+          <th class="num">Δ Score</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for i in range(movers.linhas) %}
+        <tr>
+          <td style="font-weight:600">{{ movers.altas[i].setor if i < movers.altas|length else "" }}</td>
+          <td class="num score-forte">
+            {{ "%+.1f"|format(movers.altas[i].delta) if i < movers.altas|length else "" }}
+          </td>
+          <td style="font-weight:600">{{ movers.quedas[i].setor if i < movers.quedas|length else "" }}</td>
+          <td class="num score-fraco">
+            {{ "%+.1f"|format(movers.quedas[i].delta) if i < movers.quedas|length else "" }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+
+  <!-- ═══ SECTOR ROTATION MAP ═══ -->
+  <div class="section-title">Sector Rotation Map — RRG</div>
+  <img class="rrg-img" src="{{ rrg_src }}" alt="RRG Setorial B3">
+
+  <!-- ═══ SEÇÃO 4: LISTA DE OBSERVAÇÃO ═══ -->
+  <div class="section-title">Lista de Observação — Próxima Semana</div>
+  <div class="obs-bloco">
+    <div class="obs-bloco-titulo">Setores Líderes — manter atenção</div>
+    {% if observacao.lideres %}
+      {% for obs in observacao.lideres %}
+        <div class="obs-item">{{ obs }}</div>
+      {% endfor %}
+    {% else %}
+      <div class="obs-item muted">Nenhum setor líder esta semana.</div>
+    {% endif %}
+  </div>
+  <div class="obs-bloco">
+    <div class="obs-bloco-titulo">No Radar — próximos candidatos</div>
+    {% if observacao.no_radar %}
+      {% for obs in observacao.no_radar %}
+        <div class="obs-item">{{ obs }}</div>
+      {% endfor %}
+    {% else %}
+      <div class="obs-item muted">Nenhum setor em transição (Improving + RS-Mom ≥ 100).</div>
+    {% endif %}
+  </div>
+  <div class="obs-bloco">
+    <div class="obs-bloco-titulo">Evitar — no radar negativo</div>
+    {% if observacao.evitar %}
+      {% for obs in observacao.evitar %}
+        <div class="obs-item">{{ obs }}</div>
+      {% endfor %}
+    {% else %}
+      <div class="obs-item muted">Nenhum setor em Lagging esta semana.</div>
+    {% endif %}
+  </div>
+
+  <!-- ═══ SEÇÃO 5: QUALIDADE DOS DADOS ═══ -->
+  <div class="section-title">Qualidade dos Dados</div>
+  <div class="qualidade-grid">
+    <div class="qualidade-item">
+      <span class="qualidade-label">Semana de referência</span>
+      {{ qualidade.data_semana }}
+    </div>
+    <div class="qualidade-item">
+      <span class="qualidade-label">Universo monitorado</span>
+      {{ qualidade.total_universo }} ações + {{ qualidade.benchmark }}
+    </div>
+    <div class="qualidade-item">
+      <span class="qualidade-label">Com score calculado</span>
+      <span class="qualidade-tickers ok">{{ qualidade.com_score }} tickers</span>
+    </div>
+    <div class="qualidade-item">
+      <span class="qualidade-label">Histórico completo (≥ 200 pregões)</span>
+      <span class="qualidade-tickers ok">{{ qualidade.com_dados_completos }} tickers</span>
+    </div>
+    {% if qualidade.sma_parcial %}
+    <div class="qualidade-item" style="grid-column:1/-1">
+      <span class="qualidade-label">SMA200 parcial — histórico &lt; 200 pregões</span>
+      <span class="qualidade-tickers parcial">
+        {% for ticker, n in qualidade.sma_parcial %}{{ ticker }} ({{ n }}d){% if not loop.last %}, {% endif %}{% endfor %}
+      </span>
+    </div>
+    {% endif %}
+    {% if qualidade.sem_dados %}
+    <div class="qualidade-item" style="grid-column:1/-1">
+      <span class="qualidade-label">Sem dados este período</span>
+      <span class="qualidade-tickers">{{ qualidade.sem_dados | join(', ') }}</span>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ═══ GLOSSÁRIO ═══ -->
+  <div class="glossario-box">
+    <div class="glossario-titulo">Glossário de Métricas</div>
+    <div class="glossario-grid">
+      <div class="glossario-entry"><span class="glossario-term">Flow Score (0–100):</span> Capital Flow (40pts) + Tendência (30pts) + Momentum (30pts).</div>
+      <div class="glossario-entry"><span class="glossario-term">Capital Flow:</span> Volume relativo ponderado pelo retorno da ação vs BOVA11. Maior = mais dinheiro entrando.</div>
+      <div class="glossario-entry"><span class="glossario-term">Tendência:</span> Posição da ação vs SMA 20/50/200 e inclinação da média longa.</div>
+      <div class="glossario-entry"><span class="glossario-term">Momentum:</span> Força do RS-Ratio e do RSI14 vs histórico das últimas semanas.</div>
+      <div class="glossario-entry"><span class="glossario-term">RS-Ratio:</span> Força relativa ação/benchmark normalizada. Acima de 100 = superando o índice.</div>
+      <div class="glossario-entry"><span class="glossario-term">RS-Momentum:</span> Aceleração do RS-Ratio nas últimas 4 semanas. Acima de 100 = ganhando força relativa.</div>
+      <div class="glossario-entry"><span class="glossario-term">UDVR:</span> Volume médio nos dias de alta ÷ volume médio 30 dias. Acima de 1.5x = acumulação.</div>
+      <div class="glossario-entry"><span class="glossario-term">DDVR:</span> Volume médio nos dias de baixa ÷ volume médio 30 dias. Acima de 1.5x = distribuição.</div>
+      <div class="glossario-entry"><span class="glossario-term">Confirmação interna:</span> % das ações do setor que corroboram o score setorial. Ampla = base sólida.</div>
+      <div class="glossario-entry"><span class="glossario-term">Quadrantes RRG:</span> Leading=liderando+forte, Improving=melhorando, Weakening=líder perdendo força, Lagging=atrasado.</div>
+    </div>
+  </div>
+
+  <footer>
+    Relatório educacional — não constitui recomendação de investimento.
+    Dados podem conter atrasos, falhas de fonte ou histórico insuficiente.
+  </footer>
+
+</body>
+</html>

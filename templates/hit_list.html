@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>The Hit List</title>
+  <style>
+    {% include 'estilo.css' %}
+    .tier-bloco { margin-bottom: 14px; }
+    .tier-subtitle {
+      color: var(--cinza-medio);
+      font-size: 10px;
+      margin: -4px 0 8px;
+    }
+    .hit-card {
+      border: 1px solid var(--borda);
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      break-inside: avoid;
+      background: #fff;
+    }
+    .hit-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+      color: var(--verde-escuro);
+      font-weight: 800;
+    }
+    .hit-meta {
+      color: var(--cinza-medio);
+      font-size: 10px;
+      margin-top: 2px;
+    }
+    .hit-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      margin: 8px 0;
+    }
+    .hit-metric {
+      background: var(--cinza-claro);
+      border: 1px solid var(--borda);
+      border-radius: 6px;
+      padding: 6px;
+      text-align: center;
+      font-size: 10px;
+      font-weight: 700;
+    }
+    .hit-flags {
+      color: var(--vermelho);
+      font-weight: 800;
+      margin-top: 5px;
+    }
+    .hit-significado { margin-top: 4px; }
+    .hit-inval {
+      margin-top: 4px;
+      color: var(--cinza-medio);
+      font-size: 10px;
+    }
+    .glossario {
+      font-size: 10px;
+      color: var(--cinza-medio);
+      margin-top: 14px;
+      border-top: 1px solid var(--borda);
+      padding-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="report-header">
+    <h1 class="report-title">The Hit List</h1>
+    <div class="report-subtitle">BURST TRADES · {{ data_semana }}</div>
+    <div class="header-divider"></div>
+  </div>
+
+  <p class="frase-topo">
+    Burst é aceleração: ações cujo score saltou rápido ou que já estão em alta convicção.
+    Este relatório não mede liderança sustentada; ele procura movimento rápido.
+  </p>
+
+  {% for tier in tiers %}
+    <div class="tier-bloco">
+      <div class="section-title">{{ tier.nome }}</div>
+      <div class="tier-subtitle">{{ tier.descricao }}</div>
+      {% if tier.historico_insuficiente %}
+        <div class="empty-state">histórico insuficiente para detectar bursts — necessário 2+ semanas</div>
+      {% elif tier.acoes %}
+        {% for item in tier.acoes %}
+          <div class="hit-card">
+            <div class="hit-top">
+              <div>{{ item.ticker }} · {{ item.setor }} · {{ item.quadrante }} · {{ item.tier_curto }}</div>
+              <div>Score {{ "%.1f"|format(item.score) }}</div>
+            </div>
+            <div class="hit-meta">
+              {% if item.salto is not none %}
+                salto: {{ "%+.1f"|format(item.salto) }} pts vs semana passada
+              {% else %}
+                salto: histórico insuficiente
+              {% endif %}
+            </div>
+            <div class="hit-grid">
+              <div class="hit-metric">CF<br>{{ "%.1f"|format(item.cf) }}/40</div>
+              <div class="hit-metric">Trend<br>{{ "%.1f"|format(item.trend) }}/30</div>
+              <div class="hit-metric">Mom<br>{{ "%.1f"|format(item.mom) }}/30</div>
+              <div class="hit-metric">UDVR<br>{{ "%.2f"|format(item.UDVR) }}x</div>
+              <div class="hit-metric">RS-Mom<br>{{ "%.1f"|format(item.rs_momentum) }}</div>
+            </div>
+            <div class="hit-flags">{{ item.flags_txt }}</div>
+            <div class="hit-significado">→ {{ item.significado }}</div>
+            <div class="hit-inval">Invalidação: {{ item.invalidacao }}</div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state">nenhuma ação neste tier</div>
+      {% endif %}
+    </div>
+  {% endfor %}
+
+  <div class="section-title">Lista de Observação</div>
+  {% if observacao %}
+    {% for obs in observacao %}
+      <div class="obs-item">{{ obs }}</div>
+    {% endfor %}
+  {% else %}
+    <div class="obs-item muted">Sem observações adicionais.</div>
+  {% endif %}
+
+  <div class="section-title">Qualidade dos Dados</div>
+  <div class="qualidade-grid">
+    <div class="qualidade-item"><strong>{{ qualidade.com_score }}</strong><span>com score</span></div>
+    <div class="qualidade-item"><strong>{{ qualidade.com_dados_completos }}</strong><span>com 200+ pregões</span></div>
+    <div class="qualidade-item"><strong>{{ qualidade.total_universo }}</strong><span>universo</span></div>
+  </div>
+
+  <div class="glossario">
+    <strong>Glossário:</strong>
+    Burst = salto de score vs semana anterior. Tier 1 = salto forte com score >=70.
+    Tier 2 = near-burst com score >=70. Tier 3 = salto forte com score 60-69,99.
+    Tier 4 = alta convicção por score >=80. Score = CF + Trend + Momentum.
+    UDVR = volume médio dos dias de alta contra a média de 30 pregões.
+    RRG = quadrante de rotação relativa do setor.
+  </div>
+</body>
+</html>
