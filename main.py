@@ -85,11 +85,38 @@ def _rodar_quarta():
     return enviado
 
 
+def _rodar_completo():
+    print("Modo completo: gerando todos os relatórios.")
+    calcular_scores_setoriais(gravar=True)
+    gerar_rrg_setorial()
+
+    relatorios = [
+        ("Flow Map", gerar_flow_map_pdf),
+        ("Capital Flow Leaders", gerar_capital_flow_leaders_pdf),
+        ("Smart Money Exits", gerar_smart_money_exits_pdf),
+    ]
+    enviados = []
+    for nome, funcao in relatorios:
+        caminho, resumo = funcao()
+        print(f"{nome}: PDF gerado em {caminho}")
+        enviados.append((nome, enviar_pdf(caminho, resumo)))
+
+    caminho, legenda, dados = gerar_hit_list_pdf()
+    print(f"The Hit List: PDF gerado em {caminho}")
+    if tem_acoes(dados):
+        enviados.append(("The Hit List", enviar_pdf(caminho, legenda)))
+    else:
+        enviados.append(("The Hit List", "sem ações; não enviado"))
+
+    print(f"Envios: {enviados}")
+    return enviados
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--modo",
-        choices=["auto", "sabado", "quarta", "dia-comum"],
+        choices=["auto", "sabado", "quarta", "dia-comum", "completo"],
         default="auto",
         help="Força o comportamento para teste.",
     )
@@ -101,7 +128,9 @@ def main():
     args = parser.parse_args()
 
     _preparar_base()
-    if _eh_sabado(args.modo):
+    if args.modo == "completo":
+        _rodar_completo()
+    elif _eh_sabado(args.modo):
         _rodar_sabado()
     elif _eh_quarta(args.modo):
         _rodar_quarta()
