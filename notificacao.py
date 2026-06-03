@@ -1,4 +1,5 @@
 import asyncio
+import time
 from pathlib import Path
 
 from telegram import Bot
@@ -7,6 +8,11 @@ try:
     from config import CHAT_ID_TELEGRAM, TOKEN_TELEGRAM
 except ModuleNotFoundError:
     from config_base import CHAT_ID_TELEGRAM, TOKEN_TELEGRAM
+
+
+PDF_ENVIO_TENTATIVAS = 3
+PDF_ENVIO_ESPERA_SEGUNDOS = 5
+PDF_ENVIO_TIMEOUT_SEGUNDOS = 60
 
 
 def _telegram_configurado():
@@ -27,6 +33,10 @@ async def _enviar_pdf_async(caminho_pdf, legenda):
             chat_id=CHAT_ID_TELEGRAM,
             document=arquivo,
             caption=legenda[:1024],
+            read_timeout=PDF_ENVIO_TIMEOUT_SEGUNDOS,
+            write_timeout=PDF_ENVIO_TIMEOUT_SEGUNDOS,
+            connect_timeout=PDF_ENVIO_TIMEOUT_SEGUNDOS,
+            pool_timeout=PDF_ENVIO_TIMEOUT_SEGUNDOS,
         )
 
 
@@ -47,10 +57,17 @@ def enviar_pdf(caminho_pdf, legenda):
     if not _telegram_configurado():
         print("Telegram nao configurado: TOKEN_TELEGRAM/CHAT_ID_TELEGRAM ausentes.")
         return False
-    try:
-        asyncio.run(_enviar_pdf_async(caminho_pdf, legenda))
-        print(f"PDF enviado ao Telegram: {caminho_pdf}")
-        return True
-    except Exception as erro:
-        print(f"Erro ao enviar PDF ao Telegram: {erro}")
-        return False
+
+    for tentativa in range(1, PDF_ENVIO_TENTATIVAS + 1):
+        try:
+            asyncio.run(_enviar_pdf_async(caminho_pdf, legenda))
+            print(f"envio {caminho_pdf}: tentativa {tentativa} - sucesso")
+            print(f"PDF enviado ao Telegram: {caminho_pdf}")
+            return True
+        except Exception as erro:
+            print(f"envio {caminho_pdf}: tentativa {tentativa} - falha ({erro})")
+            if tentativa < PDF_ENVIO_TENTATIVAS:
+                time.sleep(PDF_ENVIO_ESPERA_SEGUNDOS)
+
+    print(f"Erro ao enviar PDF ao Telegram apos {PDF_ENVIO_TENTATIVAS} tentativas: {caminho_pdf}")
+    return False

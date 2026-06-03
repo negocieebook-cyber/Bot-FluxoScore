@@ -196,9 +196,17 @@ def montar_hit_list():
     if tiers["tier4"]:
         observacao.append("Tier 4 já funciona com uma semana porque depende apenas de score >=80.")
 
+    sem_burst_real = (
+        not tiers["tier1"]
+        and not tiers["tier2"]
+        and not tiers["tier3"]
+        and bool(tiers["tier4"])
+    )
+
     return {
         "data_semana": data_atual,
         "historico_insuficiente": historico_insuficiente,
+        "sem_burst_real": sem_burst_real,
         "tiers": [
             {
                 "id": "tier1",
@@ -235,7 +243,11 @@ def montar_hit_list():
 
 
 def tem_acoes(dados):
-    return any(tier["acoes"] for tier in dados["tiers"])
+    tiers = dados.get("tiers", [])
+    return any(
+        tier.get("id") in ("tier1", "tier2", "tier3", "tier4") and tier.get("acoes")
+        for tier in tiers
+    )
 
 
 def legenda_hit_list(dados):

@@ -65,6 +65,15 @@
       border-top: 1px solid var(--borda);
       padding-top: 8px;
     }
+    .burst-aviso {
+      border: 1px solid #d9b44a;
+      background: #fff7df;
+      color: #654a00;
+      font-weight: 800;
+      padding: 8px 10px;
+      border-radius: 6px;
+      margin: 0 0 10px;
+    }
   </style>
 </head>
 <body>
@@ -73,6 +82,10 @@
     <div class="report-subtitle">BURST TRADES · {{ data_semana }}</div>
     <div class="header-divider"></div>
   </div>
+
+  {% if sem_burst_real %}
+    <div class="burst-aviso">Sem burst de aceleração esta semana — apenas líderes consolidados (Tier 4).</div>
+  {% endif %}
 
   <p class="frase-topo">
     Burst é aceleração: ações cujo score saltou rápido ou que já estão em alta convicção.
