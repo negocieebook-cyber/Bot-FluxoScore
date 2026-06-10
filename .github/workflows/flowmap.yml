@@ -16,10 +16,10 @@ on:
           - dia-comum
 
   # Sábado 11:00 UTC = 08:00 BRT (Brasília UTC-3): relatórios semanais.
-  # Quarta 12:00 UTC = 09:00 BRT (Brasília UTC-3): The Hit List.
+  # Terça e quinta 22:00 UTC = 19:00 BRT (Brasília UTC-3): The Hit List.
   schedule:
     - cron: "0 11 * * 6"
-    - cron: "0 12 * * 3"
+    - cron: "0 22 * * 2,4"
 
 jobs:
   flowmap:
@@ -49,4 +49,13 @@ jobs:
         run: python -m playwright install --with-deps chromium
 
       - name: Run Flow Map Brasil
-        run: python main.py --modo "${{ github.event.inputs.modo || 'auto' }}"
+        env:
+          MODO_INPUT: ${{ github.event.inputs.modo || 'auto' }}
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_SCHEDULE: ${{ github.event.schedule }}
+        run: |
+          modo="$MODO_INPUT"
+          if [ "$EVENT_NAME" = "schedule" ] && [ "$EVENT_SCHEDULE" = "0 22 * * 2,4" ]; then
+            modo="quarta"
+          fi
+          python main.py --modo "$modo"
