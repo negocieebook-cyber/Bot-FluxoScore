@@ -88,6 +88,7 @@ def adv_do_banco(ticker):
             " WHERE ticker = ? ORDER BY data DESC LIMIT 30",
             (ticker,),
         ).fetchall()
+    rows = [r for r in rows if r[0] is not None and r[1] is not None]
     if not rows:
         return None
     return sum(float(r[0]) * float(r[1]) for r in rows) / len(rows)
