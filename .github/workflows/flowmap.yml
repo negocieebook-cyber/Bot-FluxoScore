@@ -25,6 +25,9 @@ jobs:
   flowmap:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+
     env:
       TOKEN_BRAPI: ${{ secrets.TOKEN_BRAPI }}
       TOKEN_TELEGRAM: ${{ secrets.TOKEN_TELEGRAM }}
@@ -34,6 +37,23 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      # Mantem o repositorio ativo: o GitHub desliga agendamentos de repos sem
+      # alteracoes por ~60 dias. Um commit semanal reseta esse relogio.
+      - name: Sinal de vida (mantem o agendamento ativo)
+        continue-on-error: true
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > .keepalive
+          git add .keepalive
+          if git diff --cached --quiet; then
+            echo "nada novo para registrar"
+          else
+            git commit -m "chore: sinal de vida $(date -u +%Y-%m-%d)"
+            git pull --rebase --autostash origin "${GITHUB_REF_NAME}" || true
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
 
       - name: Setup Python 3.11
         uses: actions/setup-python@v5
